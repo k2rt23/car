@@ -1,0 +1,87 @@
+﻿@model Car2025.Models.Cars.CarDeleteViewModel
+
+<div class="card">
+    <div class="card-header bg-danger text-white text-center">
+        <h1>Delete Car</h1>
+    </div>
+    <div class="card-body">
+        <h4>Car Details</h4>
+        <hr />
+        <dl class="row">
+            <div class="form-group row">
+                <label asp-for="Id" class="col-sm-2 col-form-label">ID:</label>
+                <div class="col-sm-10">
+                    @Html.DisplayFor(model => model.Id)
+                </div>
+            </div>
+            <div class="form-group row">
+                <label asp-for="Make" class="col-sm-2 col-form-label">Make:</label>
+                <div class="col-sm-10">
+                    @Html.DisplayFor(model => model.Make)
+                </div>
+            </div>
+            <div class="form-group row">
+                <label asp-for="Model" class="col-sm-2 col-form-label">Model:</label>
+                <div class="col-sm-10">
+                    @Html.DisplayFor(model => model.Model)
+                </div>
+            </div>
+            <div class="form-group row">
+                <label asp-for="Year" class="col-sm-2 col-form-label">Year:</label>
+                <div class="col-sm-10">
+                    @Html.DisplayFor(model => model.Year)
+                </div>
+            </div>
+            <div class="form-group row">
+                <label asp-for="CreatedAt" class="col-sm-2 col-form-label">Created At:</label>
+                <div class="col-sm-10">
+                    @Html.DisplayFor(model => model.CreatedAt)
+                </div>
+            </div>
+            <div class="form-group row">
+                <label asp-for="ModifiedAt" class="col-sm-2 col-form-label">Modified At:</label>
+                <div class="col-sm-10">
+                    @Html.DisplayFor(model => model.ModifiedAt)
+                </div>
+            </div>
+        </dl>
+
+        <hr />
+        <form asp-action="DeleteConfirmation" method="post">
+            <input type="hidden" asp-for="Id" />
+            <div class="form-actions">
+                <button type="submit" class="btn btn-danger">Delete</button>
+                <a asp-action="Index" asp-controller="cars" class="btn btn-secondary">Back</a>
+            </div>
+        </form>
+    </div>
+</div>
+
+<style>
+    .card {
+        background-color: #1b4332;
+        padding: 20px;
+        border-radius: 10px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+        margin: 20px auto;
+        max-width: 800px;
+    }
+
+    .card-header {
+        text-align: center;
+        background-color: #d9534f;
+    }
+
+    .form-actions {
+        display: flex;
+        justify-content: space-between;
+    }
+
+    .form-group {
+        margin-bottom: 1rem;
+    }
+
+        .form-group label {
+            font-weight: bold;
+        }
+</style>
