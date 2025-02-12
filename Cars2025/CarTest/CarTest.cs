@@ -1,29 +1,48 @@
+using AutoServices.Core.ServiceInterface;
 using Cars.ApplicationServices.Services;
 using Cars.Core.Domain;
 using Cars.Core.Dto;
 using Cars.Core.ServiceInterface;
 using Cars.Data;
 using Microsoft.EntityFrameworkCore;
+using System;
+using System.Linq;
+using System.Threading.Tasks;
 using Xunit;
 
 namespace Cars.CarTest
 {
-    public class CarTest
+    public class CarTest : IDisposable
     {
+        private readonly CarsContext _context;
+        private readonly ICarsServices _carService;
+
+        public CarTest()
+        {
+            _context = GetInMemoryDbContext();
+            _carService = new CarsServices(_context);
+        }
+
         private CarsContext GetInMemoryDbContext()
         {
             var options = new DbContextOptionsBuilder<CarsContext>()
-                .UseInMemoryDatabase(Guid.NewGuid().ToString())
+                .UseInMemoryDatabase(databaseName: "CarTestDB")
                 .Options;
 
-            return new CarsContext(options);
+            var context = new CarsContext(options);
+            context.Database.EnsureCreated(); // Veendu, et andmebaas on loodud
+            return context;
+        }
+
+        public void Dispose()
+        {
+            _context.Database.EnsureDeleted(); // Kustuta testandmebaas pärast testi
+            _context.Dispose();
         }
 
         [Fact]
         public async Task Create_ShouldAddCarToDatabase()
         {
-            var context = GetInMemoryDbContext();
-            var carService = new CarsServices(context);
             var carDto = new CarDto
             {
                 Make = "Ford",
@@ -31,66 +50,34 @@ namespace Cars.CarTest
                 Year = 2022
             };
 
-            var createdCar = await carService.Create(carDto);
+            var createdCar = await _carService.Create(carDto);
 
             Assert.NotNull(createdCar);
             Assert.Equal("Ford", createdCar.Make);
             Assert.Equal("Mustang", createdCar.Model);
             Assert.Equal(2022, createdCar.Year);
-            Assert.Equal(1, context.Cars.Count());
+
+            var carsInDb = await _context.Cars.ToListAsync();
+            Assert.Single(carsInDb);
         }
 
         [Fact]
-        public async Task Should_AddCar_WhenValidDto()
+        public async Task Read_ShouldReturnCarById()
         {
-            var context = GetInMemoryDbContext();
-            var carService = new CarsServices(context);
             var carDto = MockCarData();
+            var addedCar = await _carService.Create(carDto);
 
-            var result = await carService.Create(carDto);
+            var carFromDb = await _context.Cars.FindAsync(addedCar.Id);
 
-            Assert.NotNull(result);
-            Assert.Equal(carDto.Make, result.Make);
-            Assert.Equal(carDto.Model, result.Model);
-            Assert.Equal(carDto.Year, result.Year);
+            Assert.NotNull(carFromDb);
+            Assert.Equal(addedCar.Id, carFromDb.Id);
         }
 
         [Fact]
-        public async Task Should_DeleteCarById_WhenValidId()
+        public async Task Update_ShouldModifyCarDetails()
         {
-            var context = GetInMemoryDbContext();
-            var carService = new CarsServices(context);
             var carDto = MockCarData();
-            var addedCar = await carService.Create(carDto);
-
-            var result = await carService.Delete((Guid)addedCar.Id);
-
-            Assert.NotNull(result);
-            Assert.Equal(addedCar.Id, result.Id);
-            Assert.Empty(context.Cars);
-        }
-
-        [Fact]
-        public async Task ShouldNot_DeleteCar_WhenInvalidId()
-        {
-            var context = GetInMemoryDbContext();
-            var carService = new CarsServices(context);
-            var carDto = MockCarData();
-            await carService.Create(carDto);
-
-            var result = await carService.Delete(Guid.NewGuid());
-
-            Assert.Null(result);
-            Assert.Equal(1, context.Cars.Count());
-        }
-
-        [Fact]
-        public async Task Should_UpdateCar_WhenValidData()
-        {
-            var context = GetInMemoryDbContext();
-            var carService = new CarsServices(context);
-            var carDto = MockCarData();
-            var addedCar = await carService.Create(carDto);
+            var addedCar = await _carService.Create(carDto);
 
             var updateDto = new CarDto
             {
@@ -101,12 +88,44 @@ namespace Cars.CarTest
                 ModifiedAt = DateTime.Now
             };
 
-            var updatedCar = await carService.Update(updateDto);
+            var updatedCar = await _carService.Update(updateDto);
 
             Assert.NotNull(updatedCar);
             Assert.Equal("Tesla", updatedCar.Make);
             Assert.Equal("Model S", updatedCar.Model);
             Assert.Equal(2023, updatedCar.Year);
+
+            var carsInDb = await _context.Cars.ToListAsync();
+            Assert.Single(carsInDb);
+        }
+
+        [Fact]
+        public async Task Delete_ShouldRemoveCarFromDatabase()
+        {
+            var carDto = MockCarData();
+            var addedCar = await _carService.Create(carDto);
+
+            var deletedCar = await _carService.Delete((Guid)addedCar.Id);
+
+            Assert.NotNull(deletedCar);
+            Assert.Equal(addedCar.Id, deletedCar.Id);
+
+            var carsInDb = await _context.Cars.ToListAsync();
+            Assert.Empty(carsInDb);
+        }
+
+        [Fact]
+        public async Task Delete_ShouldNotRemoveCar_WhenInvalidId()
+        {
+            var carDto = MockCarData();
+            await _carService.Create(carDto);
+
+            var result = await _carService.Delete(Guid.NewGuid());
+
+            Assert.Null(result);
+
+            var carsInDb = await _context.Cars.ToListAsync();
+            Assert.Single(carsInDb);
         }
 
         private CarDto MockCarData()

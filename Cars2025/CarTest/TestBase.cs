@@ -7,11 +7,13 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using CarTest.Macros;  
+using CarTest.Macros;
+using System;
+using System.Linq;
 
 namespace Cars.CarTest
 {
-    public abstract class TestBase
+    public abstract class TestBase : IDisposable
     {
         protected IServiceProvider ServiceProvider { get; set; }
 
@@ -24,6 +26,11 @@ namespace Cars.CarTest
 
         public void Dispose()
         {
+            
+            if (ServiceProvider is IDisposable disposable)
+            {
+                disposable.Dispose();
+            }
         }
 
         protected T Svc<T>()
@@ -34,11 +41,13 @@ namespace Cars.CarTest
         public virtual void SetupServices(IServiceCollection services)
         {
             services.AddScoped<ICarsServices, CarsServices>();
-            services.AddDbContext<CarsContext>(x =>
+
+            services.AddDbContext<CarsContext>(options =>
             {
-                x.UseInMemoryDatabase("TEST");
-                x.ConfigureWarnings(e => e.Ignore(InMemoryEventId.TransactionIgnoredWarning));
+                options.UseInMemoryDatabase("TEST");
+                options.ConfigureWarnings(warnings => warnings.Ignore(InMemoryEventId.TransactionIgnoredWarning));
             });
+
             RegisterMacros(services);
         }
 
