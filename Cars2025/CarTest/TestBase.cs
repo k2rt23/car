@@ -1,5 +1,4 @@
-﻿using AutoServices.Core.ServiceInterface;
-using Cars.ApplicationServices.Services;
+﻿using Cars.ApplicationServices.Services;
 using Cars.CarTest.Mock;
 using Cars.Core.ServiceInterface;
 using Cars.Data;
@@ -7,9 +6,11 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Diagnostics;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
-using CarTest.Macros;
+using Microsoft.Extensions.FileProviders; 
 using System;
 using System.Linq;
+using AutoServices.Core.ServiceInterface;
+using CarTest.Macros;
 
 namespace Cars.CarTest
 {
@@ -26,7 +27,6 @@ namespace Cars.CarTest
 
         public void Dispose()
         {
-            
             if (ServiceProvider is IDisposable disposable)
             {
                 disposable.Dispose();
@@ -40,7 +40,7 @@ namespace Cars.CarTest
 
         public virtual void SetupServices(IServiceCollection services)
         {
-            services.AddScoped<ICarsServices, CarsServices>();
+            services.AddScoped<ICarsServices, Cars.ApplicationServices.Services.CarServices>();
 
             services.AddDbContext<CarsContext>(options =>
             {

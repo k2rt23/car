@@ -20,7 +20,7 @@ namespace Cars.CarTest
         public CarTest()
         {
             _context = GetInMemoryDbContext();
-            _carService = new CarsServices(_context);
+            _carService = new Cars.ApplicationServices.Services.CarServices(_context); // Kasutame täielikku nime
         }
 
         private CarsContext GetInMemoryDbContext()
