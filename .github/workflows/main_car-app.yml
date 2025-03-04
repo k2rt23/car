@@ -13,10 +13,12 @@ jobs:
   build:
     runs-on: windows-latest
     permissions:
-      contents: read # This is required for actions/checkout
+      contents: read
 
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
       - name: Set up .NET Core
         uses: actions/setup-dotnet@v4
@@ -24,10 +26,10 @@ jobs:
           dotnet-version: '8.x'
 
       - name: Build with dotnet
-        run: dotnet build car/Cars2025.sln --configuration Release
+        run: dotnet build Cars2025/Cars2025.sln --configuration Release
 
       - name: dotnet publish
-        run: dotnet publish car/Cars2025.sln -c Release -o "${{env.DOTNET_ROOT}}/myapp"
+        run: dotnet publish Cars2025/Cars2025.sln -c Release -o "${{env.DOTNET_ROOT}}/myapp"
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -64,6 +66,5 @@ jobs:
         with:
           app-name: 'Car-app'
           slot-name: 'Production'
-          package: "${{env.DOTNET_ROOT}}/myapp"
+          package: .
 
-          
